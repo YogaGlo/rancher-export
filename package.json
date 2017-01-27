@@ -11,7 +11,6 @@
   "dependencies": {
     "async": "^2.1.4",
     "bunyan": "^1.8.5",
-    "bunyan-pretty-stream": "^1.0.1",
     "lodash": "^4.17.4",
     "superagent": "^3.3.2"
   },

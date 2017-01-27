@@ -3,38 +3,32 @@
 const request = require('superagent'),
 	async = require('async'),
 	_ = require('lodash'),
-	bunyan = require('bunyan'),
-	PrettyStream = require('bunyan-pretty-stream');
+	bunyan = require('bunyan');
 
 const log = bunyan.createLogger({
-	name: 'exporter',
+	name: 'rancher-export',
 	streams: [
 		{
 			level: 'info',
 			stream: process.stdout
-			// stream: new PrettyStream()
 		}
 	]
 });
 
 const rancherApi = 'https://rancher.ygstaging.com/v1',
-	// rancherApiKey = '553C49929F1EF35CADB9',
-	// rancherApiSecret = 'VFtfciGHFZLMfodqBW7GVPNxVqWYSfzsmGpdQpVw';
-
-
-	rancherApiKey = '479D02118244B478495D',
-	rancherApiSecret = 'WetC9KuUsecf5gNFQvKDdd8Dxas3556M51dM4ohc';
+	rancherApiKey = '',
+	rancherApiSecret = '';
 
 // get available Environments (NOTE: Environment is actually called 'project' in the API)
 // TODO actually validate we're getting correct responses (there is no error checking below)
 function getEnvironments(cb) {
 	let requestURL = [rancherApi,'projects','?all=true'].join('/');
 
-	rancherApiRequest(requestURL, function (err, data) {
+	rancherApiRequest(requestURL, function (err, data) { // 'data' is an array of environments with all the cruft
 		if (err) { return cb(err); }
 		// Filter out inactive envs
 		async.filter(data,
-			// iteratee
+			// filter
 			function (e, cb) {
 				cb(null, (e.state === 'active'));
 			},
@@ -53,17 +47,12 @@ function getEnvironments(cb) {
 function getStacks(environment, cb) {
 	let requestURL = [rancherApi,'projects', environment.id, 'environments'].join('/');
 
-	rancherApiRequest(requestURL, function (err, data) {
+	rancherApiRequest(requestURL, function (err, data) { // 'data' is an array of stacks with all the cruft
 		if (err) { return cb(err); }
-		async.map(data,
-			// iteratee
-			injectComposeConfig ,
-			// callback
-			function (err, stacks) {
-				log.debug({getStacks: stacks});
-				return cb(null, stacks);
-			}
-		);
+		async.map(data,	injectComposeConfig, function (err, stacks) {
+			log.debug({getStacks: stacks});
+			return cb(null, stacks);
+		});
 	});
 }
 
@@ -165,54 +154,29 @@ function downloadComposeConfigFile(stack, cb) { // NOT IN USE
 		});
 }
 
-
-// MAIN
-function getWorldConfig(cb) {
-	async.autoInject({
-		envs: function (cb) {
-			getEnvironments(cb);
-		},
-		stacks: function (envs, cb) {
-			// log.info({envs:envs})
-			async.map(envs,	injectStacks , function (err, results) {
-				log.info({inject: results})
-				if (err) {
-					cb (err);
-				} else {
-					cb(null, results);
-				}
-			});
-		}
-	}, function (err, results) {
+// Return the entire config for all environments visible to this API key pair
+function getRancherUniverse(cb) {
+	async.waterfall([
+			function (cb) {
+				getEnvironments(cb);
+			},
+			function (envs, cb) {
+				async.map(envs,	injectStacks, function (err, results) {
+					if (err) {
+						cb (err);
+					} else {
+						cb(null, results);
+					}
+				});
+			}
+		], function (err, envs) {
 			if (err) { return cb (err); }
-			cb (results);
+			log.debug({envs:envs})
+			cb (envs);
 	});
 }
 
-// function f(cb) {
-// 	async.auto({
-// 		a: function (cb) {
-// 			cb(null, 'foo');
-// 		},
-// 		b: ['a', function (r, cb) {
-// 				log.info(r);
-// 				cb(null, ['baz']);
-// 			}]
-// 	}, function (err, r) {
-// 			log.info({r: r});
-// 	});
-// }
-
-// f(function (x) {
-// 	log.info(x);
-// });
-
-
-getWorldConfig(function (w) {
-	log.info({w: w});
+//// MAIN
+getRancherUniverse(function (r) {
+	log.debug({rancher: r});
 });
-
-
-// getEnvironments(function (err, data) {
-// 		log.info(data)
-// })

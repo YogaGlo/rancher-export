@@ -25,28 +25,6 @@
     ]
   },
   {
-    "id": "1a321",
-    "name": "Environment Name",
-    "description": "Environment Description",
-    "stacks": [
-      {
-        "id": "1p986",
-        "name": "Stack Name",
-        "description": "Stack Description",
-        "composeconfig": {
-          "dockerCompose": "YAML",
-          "rancherCompose": "YAML"
-        }
-      },
-      {
-        "id": "1p098",
-        "name": "Stack Name",
-        "description": "Stack Description",
-        "composeconfig": {
-          "dockerCompose": "YAML",
-          "rancherCompose": "YAML"
-        }
-      }
-    ]
+    "id": "..."
   }
 ]
