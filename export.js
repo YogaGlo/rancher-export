@@ -1,5 +1,7 @@
 /*jshint esversion: 6 */
 
+require('dotenv').config();
+
 const request = require('superagent'),
 	async = require('async'),
 	_ = require('lodash'),
@@ -15,9 +17,9 @@ const log = bunyan.createLogger({
 	]
 });
 
-const rancherApi = 'https://rancher.ygstaging.com/v1',
-	rancherApiKey = '',
-	rancherApiSecret = '';
+const rancherApi = process.env.RANCHER_API_BASE_URL,
+	rancherApiKey = process.env.RANCHER_API_ACCESS_KEY,
+	rancherApiSecret = process.env.RANCHER_API_SECRET_KEY;
 
 // get available Environments (NOTE: Environment is actually called 'project' in the API)
 // TODO actually validate we're getting correct responses (there is no error checking below)
@@ -171,12 +173,12 @@ function getRancherUniverse(cb) {
 			}
 		], function (err, envs) {
 			if (err) { return cb (err); }
-			log.debug({envs:envs})
+			log.debug({envs:envs});
 			cb (envs);
 	});
 }
 
 //// MAIN
 getRancherUniverse(function (r) {
-	log.debug({rancher: r});
+	log.info({rancher: r});
 });
