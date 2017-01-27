@@ -17,38 +17,58 @@ const log = bunyan.createLogger({
 	]
 });
 
-const rancherApi = 'https://rancher.ygstaging.com/v1/',
-	rancherApiKey = '553C49929F1EF35CADB9',
-	rancherApiSecret = 'VFtfciGHFZLMfodqBW7GVPNxVqWYSfzsmGpdQpVw';
+const rancherApi = 'https://rancher.ygstaging.com/v1',
+	// rancherApiKey = '553C49929F1EF35CADB9',
+	// rancherApiSecret = 'VFtfciGHFZLMfodqBW7GVPNxVqWYSfzsmGpdQpVw';
+
+
+	rancherApiKey = '479D02118244B478495D',
+	rancherApiSecret = 'WetC9KuUsecf5gNFQvKDdd8Dxas3556M51dM4ohc';
 
 // get available Environments (NOTE: Environment is actually called 'project' in the API)
+// TODO actually validate we're getting correct responses (there is no error checking below)
 function getEnvironments(cb) {
-	let requestURL = [rancherApi,'projects'].join('/');
+	let requestURL = [rancherApi,'projects','?all=true'].join('/');
 
 	rancherApiRequest(requestURL, function (err, data) {
 		if (err) { return cb(err); }
-
-		let envs = _.map(data, getBasicProps);
-		log.debug({getEnvironments: envs});
-		return cb(null, envs);
+		// Filter out inactive envs
+		async.filter(data,
+			// iteratee
+			function (e, cb) {
+				cb(null, (e.state === 'active'));
+			},
+			// callback
+			function (err, results) {
+				let envs = _.map(results, getBasicProps);
+				log.debug({getEnvironments: envs});
+				return cb(null, envs);
+			}
+		);
 	});
 }
 
 // get Stacks of an Environment (NOTE: Stack is actually called 'environment' in the API)
+// return an array of Stacks, populated with their Compose configs
 function getStacks(environment, cb) {
 	let requestURL = [rancherApi,'projects', environment.id, 'environments'].join('/');
 
 	rancherApiRequest(requestURL, function (err, data) {
 		if (err) { return cb(err); }
-		async.map(data, extractStackConfig, function (err, stacks) {
-			log.debug({getStacks: stacks});
-			return cb(null, stacks);
-		});
+		async.map(data,
+			// iteratee
+			injectComposeConfig ,
+			// callback
+			function (err, stacks) {
+				log.debug({getStacks: stacks});
+				return cb(null, stacks);
+			}
+		);
 	});
 }
 
-// extract a concise stack config from a complete stack object returned by the API.
-function extractStackConfig(stack, cb) {
+// Given the verbose stack object returned by the API, filter out the irrelevant fields, and retrieve and inject the Stack's compose config
+function injectComposeConfig (stack, cb) {
 	async.auto({
 		basics: function (cb) {
 			cb(null, getBasicProps(stack));
@@ -63,7 +83,7 @@ function extractStackConfig(stack, cb) {
 		if (err) { return (err); }
 		let config = results.basics;
 		config.composeconfig = results.compose;
-		log.debug({extractStackConfig: config});
+		log.debug({injectComposeConfig : config});
 		return cb(null, config);
 	});
 }
@@ -81,7 +101,9 @@ function getComposeConfig(stack, cb) {
 		.set('Content-Type', 'application/json')
 		.query({action: "exportconfig"})
 		.end(function (err, res) {
-			if (err) { return cb(err); }
+			if (err) {
+				throw (err);
+			}
 			if (_.isEmpty(res)) { return cb(new Error('Rancher API sent an empty response')); }
 			let data = JSON.parse(res.text);
 			log.debug({getComposeConfig: data});
@@ -89,6 +111,16 @@ function getComposeConfig(stack, cb) {
 		});
 }
 
+// given an environment, retrieve its stacks, and populate the environment object with these stacks
+function injectStacks (environment, cb) {
+	getStacks(environment, function (err, stacks) {
+		if (err) { cb (err); }
+		else {
+			environment.stacks = stacks;
+			cb (null, environment);
+		}
+	});
+}
 
 // helper to make Rancher API requests
 function rancherApiRequest(requestURL, cb) {
@@ -97,7 +129,8 @@ function rancherApiRequest(requestURL, cb) {
 		.auth(rancherApiKey, rancherApiSecret)
 		.set('Accept', 'application/json')
 		.end(function (err, res) {
-			if (err) { return cb(err); }
+			log.debug({'rancherApiRequest': requestURL});
+			if (err) { throw (err); }
 			if (_.isEmpty(res)) { return cb(new Error('Rancher API sent an empty response')); }
 			let data = JSON.parse(res.text).data;
 			return cb(null, data);
@@ -113,7 +146,7 @@ function makeFilename(environment, stack) {
 	return (name + '.zip');
 }
 
-// helper to get basic interesting fields of a Rancher object
+// helper to get basic fields of a Rancher object
 function getBasicProps(obj) {
 	return _.pick(obj, ['id', 'name', 'description']);
 }
@@ -126,42 +159,60 @@ function downloadComposeConfigFile(stack, cb) { // NOT IN USE
 		.auth(rancherApiKey, rancherApiSecret)
 		.set('Accept', 'application/json')
 		.end(function (err, res) {
-			if (err) { return cb(err); }
+			if (err) { throw (err); }
 			if (_.isEmpty(res)) { return cb(new Error('Rancher API sent an empty response')); }
-			console.log(res);
+			log.info(res);
 		});
 }
 
-async.auto({
-	envs: function (autoCb) {
-		getEnvironments(autoCb);
-	},
-	stacks: ['envs',
-		function (results, cb) {
-			async.each(results.envs, function (env) {
-				getStacks(env, function (err, stacks) {
-					if (err) { cb (err); }
-					else {
-						env.stacks = stacks;
-						cb();
-					}
-				});
-			}, function (err) {
+
+// MAIN
+function getWorldConfig(cb) {
+	async.autoInject({
+		envs: function (cb) {
+			getEnvironments(cb);
+		},
+		stacks: function (envs, cb) {
+			// log.info({envs:envs})
+			async.map(envs,	injectStacks , function (err, results) {
+				log.info({inject: results})
 				if (err) {
-					autoCb (err);
+					cb (err);
 				} else {
-					autoCb(null, results);
+					cb(null, results);
 				}
 			});
 		}
-	]
-}, function (err, results) {
-		log.debug({async: results});
+	}, function (err, results) {
+			if (err) { return cb (err); }
+			cb (results);
+	});
+}
+
+// function f(cb) {
+// 	async.auto({
+// 		a: function (cb) {
+// 			cb(null, 'foo');
+// 		},
+// 		b: ['a', function (r, cb) {
+// 				log.info(r);
+// 				cb(null, ['baz']);
+// 			}]
+// 	}, function (err, r) {
+// 			log.info({r: r});
+// 	});
+// }
+
+// f(function (x) {
+// 	log.info(x);
+// });
+
+
+getWorldConfig(function (w) {
+	log.info({w: w});
 });
 
 
-// getEnvironments(function (err, e) {
-// 	getStacks(e[0], function (err, s) {
-// 		log.info({stacks: s})
-// 	})
-// });
+// getEnvironments(function (err, data) {
+// 		log.info(data)
+// })
