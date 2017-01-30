@@ -12,6 +12,7 @@
     "async": "^2.1.4",
     "bunyan": "^1.8.5",
     "lodash": "^4.17.4",
+    "sanitize-filename": "^1.6.1",
     "superagent": "^3.3.2"
   },
   "devDependencies": {

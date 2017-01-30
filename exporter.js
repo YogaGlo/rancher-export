@@ -5,17 +5,8 @@ require('dotenv').config();
 const request = require('superagent'),
 	async = require('async'),
 	_ = require('lodash'),
-	bunyan = require('bunyan');
+	log = require('./logger').log;
 
-const log = bunyan.createLogger({
-	name: 'rancher-export',
-	streams: [
-		{
-			level: 'info',
-			stream: process.stdout
-		}
-	]
-});
 
 const rancherApi = process.env.RANCHER_API_BASE_URL,
 	rancherApiKey = process.env.RANCHER_API_ACCESS_KEY,
@@ -62,7 +53,7 @@ function getStacks(environment, cb) {
 function injectComposeConfig (stack, cb) {
 	async.auto({
 		basics: function (cb) {
-			cb(null, getBasicProps(stack));
+			cb(null, getBasicProps(stack)); // Q: is this unsafe due to no callback?
 		},
 		compose: function (cb) {
 			getComposeConfig(stack, function (err, composeConfig) {
@@ -128,15 +119,6 @@ function rancherApiRequest(requestURL, cb) {
 		});
 }
 
-// helper to make a filename
-function makeFilename(environment, stack) {
-	let name=[
-		environment.name.toLowerCase().trim().split(' ').join('-'),
-		stack.name.toLowerCase().trim().split(' ').join('-')
-	].join('_');
-	return (name + '.zip');
-}
-
 // helper to get basic fields of a Rancher object
 function getBasicProps(obj) {
 	return _.pick(obj, ['id', 'name', 'description']);
@@ -157,7 +139,7 @@ function downloadComposeConfigFile(stack, cb) { // NOT IN USE
 }
 
 // Return the entire config for all environments visible to this API key pair
-function getRancherUniverse(cb) {
+function rancherExport(cb) {
 	async.waterfall([
 			function (cb) {
 				getEnvironments(cb);
@@ -178,7 +160,7 @@ function getRancherUniverse(cb) {
 	});
 }
 
-//// MAIN
-getRancherUniverse(function (r) {
-	log.info({rancher: r});
-});
+module.exports = {
+	rancherExport: rancherExport,
+	getBasicProps: getBasicProps
+};
