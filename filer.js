@@ -1,7 +1,5 @@
 /*jshint esversion: 6 */
 
-var mock = require('./test/mock.json');
-
 const log = require('./logger').log,
 	_ = require('lodash'),
 	async = require('async'),
@@ -65,18 +63,14 @@ function createDirectory(obj, workdir, cb) {
 	});
 }
 
-// function writeFile(path, data, cb) {
-// 	log.data({writeFile: {data: data, path: path}});
-// 	// log.info(`Writing meta for ${data.name} at ${path}`);
-// 	fs.writeFile(path, data, function (err) {
-// 		if (err) {throw (err);}
-// 		log.info(`Saved `)
-// 	});
-// }
-
+// Save YAMLs for the stack
 function saveYaml(stack, path) {
-	log.debug(`Saving yaml for ${stack.name}`);
-	// body...
+	fs.writeFile(`${path}/docker-compose.yml`, stack.composeconfig.dockerComposeConfig, function (err) {
+		if (err) { throw err; }
+	});
+	fs.writeFile(`${path}/rancher-compose.yml`, stack.composeconfig.rancherComposeConfig, function (err) {
+		if (err) { throw err; }
+	});
 }
 
 // Given an obj (stack or env), save its metadata as json
