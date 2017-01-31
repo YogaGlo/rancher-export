@@ -17,11 +17,11 @@ function createRootDirectory(cb) {
 	fs.mkdir(exportRootPath, cb);
 }
 
-// formatter to transform a given Env or Stack data into a filename
+// Formatter to transform a given Env or Stack data into a filename
 function makeFilename(data) {
 	log.debug({makeFilename: data});
 	if (! _.has(data, 'name')) {
-		throw new Error ('Need a name, but got something without \'name\' property');
+		throw new Error ('Need a name, but got something without a \'name\' property');
 	}
 	let filename = data.name;
 	// sanitize input
@@ -31,9 +31,8 @@ function makeFilename(data) {
 	return filename;
 }
 
-// given a Rancher obj (env or stack), create a directory to hold its export
+// Given a Rancher obj (env or stack), create a directory to hold its export
 function createDirectory(obj, workdir, cb) {
-	// process.chdir(workdir); // change into working directory first
 	async.autoInject({
 		meta: function (cb) {
 			let meta = getBasicProps(obj);
@@ -46,7 +45,8 @@ function createDirectory(obj, workdir, cb) {
 		absent: function (name, cb) {
 			log.debug({createDirectory: {cwd: process.cwd()}});
 			fs.stat(`${workdir}/${name}`, function (err, stats) {
-				if (err && err.code !== 'ENOENT') { cb (err); } // err is bad, but 'ENOENT' is good.
+				// err is bad, but 'ENOENT' is good.
+				if (err && err.code !== 'ENOENT') { cb (err); }
 				if (stats) {
 					cb(new Error (`Path '${workdir}/${name}' already exists`));
 				} else {
@@ -65,9 +65,14 @@ function createDirectory(obj, workdir, cb) {
 	});
 }
 
-function writeFile(data, path, cb) {
-	fs.open(path);
-}
+// function writeFile(path, data, cb) {
+// 	log.data({writeFile: {data: data, path: path}});
+// 	// log.info(`Writing meta for ${data.name} at ${path}`);
+// 	fs.writeFile(path, data, function (err) {
+// 		if (err) {throw (err);}
+// 		log.info(`Saved `)
+// 	});
+// }
 
 function saveYaml(stack, path) {
 	log.debug(`Saving yaml for ${stack.name}`);
@@ -76,15 +81,39 @@ function saveYaml(stack, path) {
 
 // Given an obj (stack or env), save its metadata as json
 function saveMeta(obj, path) {
-	log.debug(`Saving metadata for ${obj.name}`);
+	async.autoInject({
+		filename: function (cb) {
+			cb(null, makeFilename(obj) + '-meta.json');
+		},
+		meta: function (cb) {
+			let meta = {
+				name: obj.name,
+				description: obj.description
+			};
+			if (_.has(obj, 'stacks')) {
+				meta.stacks = obj.stacks.length;
+			}
+			log.debug({meta: meta});
+			cb(null, meta);
+		}
+	}, function (err, results) {
+		let fullpath = `${path}/${results.filename}`;
+		log.debug({saveMeta: results.meta });
+		fs.writeFile(fullpath, JSON.stringify(results.meta), function (err) {
+			if (err) { throw err; }
+			log.debug({saveMeta: {wrote: fullpath}});
+		});
+	});
 }
 
 // Given an object (stack or env), export it to a directory
 function exportObj(obj, dir, exportCb) {
 	createDirectory(obj, dir, function (dir) {
-		saveMeta(obj, dir); // dir is now the new directory that was created
+		// dir is now the new directory that was created
+		saveMeta(obj, dir);
 
-		if ( _.has(obj, 'stacks')) { 	// this is an env - export all stacks
+		if ( _.has(obj, 'stacks')) {
+			// this is an env - export all stacks
 			envName = obj.name;
 			async.each(obj.stacks, function (stack, cb) {
 				exportObj(stack, dir, function (err) {
@@ -96,7 +125,8 @@ function exportObj(obj, dir, exportCb) {
 			});
 		}
 
-		else { // this is a stack
+		else {
+			// this is a stack
 			saveYaml(obj, dir);
 			log.debug ({exportObj: {stack: obj.name, dir: dir}});
 			log.info (`Exported stack ${obj.name}`);
@@ -127,37 +157,24 @@ function save(envs) {
 	});
 }
 
-
+module.exports = {
+	save: save
+};
 
 /*
 * Directory structure:
 *
 *		export
 *		├── env-1
-*		│   ├── meta.json
+*		│   ├── env-1-meta.json
 *		│   ├── stack-1
 *		│   │   ├── docker-compose.yml
-*		│   │   ├── meta.json
+*		│   │   ├── stack-1-meta.json
 *		│   │   └── rancher-compose.yml
 *		│   └── ...stack-n
-*		│       ├── meta.json
+*		│       ├── stack-n-meta.json
 *		│       └── ...
 *		└── ...env-n
-*		    ├── meta.json
+*		    ├── env-n-meta.json
 *		    └── ...
 */
-
-
-
-
-// createRootDirectory(function () {
-// 	createDirectory(mock[0], exportRootPath);
-// });
-
-
-
-// save(mock)
-
-module.exports = {
-	save: save
-};
