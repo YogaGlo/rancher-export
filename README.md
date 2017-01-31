@@ -18,16 +18,9 @@ An "environment" key limits access to the Rancher environment you're currently s
 
 ## running
 
-`node export.js`. The configs will be printed to stdout as json.
+`node export.js`. The configs will be saved into an `export` directory in the current working dir.
 
-OR
-
-`node export.js | bunyan`. The configs will be printed to stdout and piped through the `bunyan` CLI tool for pretty printing, if you have it. Unfortunately, YAML is not prettified.
-
-OR
-
-`node export.js | pbcopy`. This will copy the configs into your clipboard, for further pasting and inspecting in a text editor.
-
+the `export` directory must be manually removed before running this script again.
 
 
 
