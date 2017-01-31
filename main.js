@@ -1,14 +1,13 @@
 /*jshint esversion: 6 */
 
-const rancherExport = require('./exporter').rancherExport,
-	save = require('./filer').save,
+const exporter = require('./exporter'),
+	filer = require('./filer'),
 	log = require('./logger').log;
 
 //// MAIN
-// rancherExport(function (r) {
-// 	save(r);
-// 	// log.info({rancher: r});
-// });
+exporter.rancherExport(function (rancher) {
+	filer.save(rancher);
+});
 
-
-save(require('./test/mock-full.json'))
+// can be used for testing
+// save(require('./test/mock-full.json'))
