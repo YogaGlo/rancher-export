@@ -5,7 +5,10 @@ const rancherExport = require('./exporter').rancherExport,
 	log = require('./logger').log;
 
 //// MAIN
-rancherExport(function (r) {
-	save(r);
-	// log.info({rancher: r});
-});
+// rancherExport(function (r) {
+// 	save(r);
+// 	// log.info({rancher: r});
+// });
+
+
+save(require('./test/mock-full.json'))
