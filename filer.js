@@ -19,7 +19,7 @@ function createRootDirectory(cb) {
 
 // formatter to transform a given Env or Stack data into a filename
 function makeFilename(data) {
-	log.debug({makeFilename: data})
+	log.debug({makeFilename: data});
 	if (! _.has(data, 'name')) {
 		throw new Error ('Need a name, but got something without \'name\' property');
 	}
@@ -33,6 +33,7 @@ function makeFilename(data) {
 
 // given a Rancher obj (env or stack), create a directory to hold its export
 function createDirectory(obj, workdir, cb) {
+	// process.chdir(workdir); // change into working directory first
 	async.autoInject({
 		meta: function (cb) {
 			let meta = getBasicProps(obj);
@@ -43,9 +44,8 @@ function createDirectory(obj, workdir, cb) {
 			cb(null, name);
 		},
 		absent: function (name, cb) {
-			process.chdir(workdir);
-			log.debug({cwd: process.cwd()});
-			fs.stat(name, function (err, stats) {
+			log.debug({createDirectory: {cwd: process.cwd()}});
+			fs.stat(`${workdir}/${name}`, function (err, stats) {
 				if (err && err.code !== 'ENOENT') { cb (err); } // err is bad, but 'ENOENT' is good.
 				if (stats) {
 					cb(new Error (`Path '${workdir}/${name}' already exists`));
@@ -55,12 +55,12 @@ function createDirectory(obj, workdir, cb) {
 			});
 		},
 		mkdir: function (name, absent, cb) {
-			fs.mkdir(name, cb);
+			fs.mkdir(`${workdir}/${name}`, cb);
 		}
 	}, function (err, results) {
 		if (err) { throw (err);}
 		let newDir = `${workdir}/${results.name}`;
-		log.debug(`Created ${newDir}`);
+		log.debug({createDirectory: {created: newDir}});
 		cb(newDir);
 	});
 }
@@ -80,23 +80,26 @@ function saveMeta(obj, path) {
 }
 
 // Given an object (stack or env), export it to a directory
-function exportObj(obj, workdir, exportCb) {
-	createDirectory(obj, workdir, function (newDir) {
-		saveMeta(obj, newDir);
-		if ( _.has(obj, 'stacks')) { // if true, this is an env - export all stacks
+function exportObj(obj, dir, exportCb) {
+	createDirectory(obj, dir, function (dir) {
+		saveMeta(obj, dir); // dir is now the new directory that was created
+
+		if ( _.has(obj, 'stacks')) { 	// this is an env - export all stacks
+			envName = obj.name;
 			async.each(obj.stacks, function (stack, cb) {
-				exportObj(stack, newDir, function (err) {
-					log.debug(`Exported stack ${stack.name}`);
+				exportObj(stack, dir, function (err) {
+					log.debug({exportObj: {name: stack.name, dir: dir}});
 					cb(err);
 				});
 			}, function (err) {
-				if (err) {exportCb (err);}
-				log.debug(`Exported all stacks for environment ${obj.name}`);
-				exportCb();
+				exportCb(err);
 			});
 		}
+
 		else { // this is a stack
-			saveYaml(obj, newDir);
+			saveYaml(obj, dir);
+			log.debug ({exportObj: {stack: obj.name, dir: dir}});
+			log.info (`Exported stack ${obj.name}`);
 			exportCb();
 		}
 	});
@@ -105,19 +108,21 @@ function exportObj(obj, workdir, exportCb) {
 function save(envs) {
 	let workdir = exportRootPath;
 	async.autoInject({
-		createRoot: function (cb) {
-			createRootDirectory(cb);
+		createRoot: function (autoCb) {
+			createRootDirectory(autoCb);
 		},
-		exportEnvs: function (createRoot, cb) {
+		exportEnvs: function (createRoot, autoCb) {
 			async.each(envs, function (e, cb) {
 				exportObj(e, workdir, function (err) {
-					if(err) { throw (err);}
+					if(err) { cb (err);}
 					cb();
-				})
-			})
+				});
+			}, function (err) {
+					autoCb (err);
+			});
 		}
 	}, function (err, results) {
-		if (err) { throw (err) }
+		if (err) { throw (err); }
 		log.debug({save: results});
 	});
 }
@@ -155,4 +160,4 @@ function save(envs) {
 
 module.exports = {
 	save: save
-}
+};
