@@ -32,31 +32,33 @@ function makeFilename(data) {
 // Given a Rancher obj (env or stack), create a directory to hold its export
 function createDirectory(obj, workdir, cb) {
 	async.autoInject({
-		meta: function (cb) {
+		meta: function (autoCb) {
 			let meta = getBasicProps(obj);
-			cb(null, meta);
+			autoCb(null, meta);
 		},
-		name: function (meta, cb) {
+		name: function (meta, autoCb) {
 			let name = makeFilename(meta);
-			cb(null, name);
+			autoCb(null, name);
 		},
-		absent: function (name, cb) {
+		absent: function (name, autoCb) {
 			log.debug({createDirectory: {cwd: process.cwd()}});
 			fs.stat(`${workdir}/${name}`, function (err, stats) {
 				// err is bad, but 'ENOENT' is good.
-				if (err && err.code !== 'ENOENT') { cb (err); }
+				if (err && err.code !== 'ENOENT') { return autoCb (err); }
 				if (stats) {
-					cb(new Error (`Path '${workdir}/${name}' already exists`));
-				} else {
-					cb();
+					return autoCb(new Error (`Path '${workdir}/${name}' already exists`));
 				}
+				autoCb();
 			});
 		},
-		mkdir: function (name, absent, cb) {
-			fs.mkdir(`${workdir}/${name}`, cb);
+		mkdir: function (name, absent, autoCb) {
+			fs.mkdir(`${workdir}/${name}`, autoCb);
 		}
 	}, function (err, results) {
-		if (err) { throw (err);}
+		if (err) {
+			log.error(err);
+			throw (err);
+		}
 		let newDir = `${workdir}/${results.name}`;
 		log.debug({createDirectory: {created: newDir}});
 		cb(newDir);
@@ -65,10 +67,10 @@ function createDirectory(obj, workdir, cb) {
 
 // Save YAMLs for the stack
 function saveYaml(stack, path) {
-	fs.writeFile(`${path}/docker-compose.yml`, stack.composeconfig.dockerComposeConfig, function (err) {
+	fs.writeFile(`${path}/docker-compose.yml`, stack.composeConfig.dockerComposeConfig, function (err) {
 		if (err) { throw err; }
 	});
-	fs.writeFile(`${path}/rancher-compose.yml`, stack.composeconfig.rancherComposeConfig, function (err) {
+	fs.writeFile(`${path}/rancher-compose.yml`, stack.composeConfig.rancherComposeConfig, function (err) {
 		if (err) { throw err; }
 	});
 }
@@ -136,13 +138,13 @@ function save(envs) {
 			createRootDirectory(autoCb);
 		},
 		exportEnvs: function (createRoot, autoCb) {
-			async.each(envs, function (e, cb) {
+			async.each(envs, function (e, eachCb) {
 				exportObj(e, workdir, function (err) {
-					if(err) { cb (err);}
-					cb();
+					if (err) { return eachCb (err);}
+					eachCb();
 				});
 			}, function (err) {
-				autoCb (err);
+				autoCb(err);
 			});
 		}
 	}, function (err, results) {

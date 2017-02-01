@@ -12,7 +12,7 @@ const rancherApi = process.env.RANCHER_API_BASE_URL,
 	rancherApiKey = process.env.RANCHER_API_ACCESS_KEY,
 	rancherApiSecret = process.env.RANCHER_API_SECRET_KEY;
 
-// get available Environments (NOTE: Environment is actually called 'project' in the API)
+// Get available Environments (NOTE: Environment is actually called 'project' in the API)
 // TODO actually validate we're getting correct responses (there is no error checking below)
 function getEnvironments(cb) {
 	let requestURL = [rancherApi,'projects','?all=true'].join('/');
@@ -35,8 +35,8 @@ function getEnvironments(cb) {
 	});
 }
 
-// get Stacks of an Environment (NOTE: Stack is actually called 'environment' in the API)
-// return an array of Stacks, populated with their Compose configs
+// Get Stacks of an Environment (NOTE: Stack is actually called 'environment' in the API)
+// Return an array of Stacks, populated with their Compose configs
 function getStacks(environment, cb) {
 	let requestURL = [rancherApi,'projects', environment.id, 'environments'].join('/');
 
@@ -52,25 +52,25 @@ function getStacks(environment, cb) {
 // Given the verbose stack object returned by the API, filter out the irrelevant fields, and retrieve and inject the Stack's compose config
 function injectComposeConfig (stack, cb) {
 	async.auto({
-		basics: function (cb) {
-			cb(null, getBasicProps(stack));
+		basics: function (autoCb) {
+			autoCb(null, getBasicProps(stack));
 		},
-		compose: function (cb) {
+		compose: function (autoCb) {
 			getComposeConfig(stack, function (err, composeConfig) {
-				if (err) { return cb(err); }
-				cb(null, composeConfig);
+				if (err) { return autoCb(err); }
+				autoCb(null, composeConfig);
 			});
 		}
 	}, function (err, results) {
-		if (err) { return (err); }
+		if (err) { return cb (err); }
 		let config = results.basics;
-		config.composeconfig = results.compose;
+		config.composeConfig = results.compose;
 		log.debug({injectComposeConfig : config});
 		return cb(null, config);
 	});
 }
 
-// get Compose config for a stack
+// Get Compose config for a stack
 function getComposeConfig(stack, cb) {
 	if ( stack.type !== 'environment' ) { // remember that Stack = environment in Rancher API parlance
 		throw new Error('Expected a stack, got something else');
@@ -93,18 +93,16 @@ function getComposeConfig(stack, cb) {
 		});
 }
 
-// given an environment, retrieve its stacks, and populate the environment object with these stacks
+// Given an environment, retrieve its stacks, and populate the environment object with these stacks
 function injectStacks (environment, cb) {
 	getStacks(environment, function (err, stacks) {
-		if (err) { cb (err); }
-		else {
-			environment.stacks = stacks;
-			cb (null, environment);
-		}
+		if (err) { return cb (err); }
+		environment.stacks = stacks;
+		cb (null, environment);
 	});
 }
 
-// helper to make Rancher API requests
+// Helper to make Rancher API requests
 function rancherApiRequest(requestURL, cb) {
 	request
 		.get(requestURL)
@@ -119,44 +117,27 @@ function rancherApiRequest(requestURL, cb) {
 		});
 }
 
-// helper to get basic fields of a Rancher object
+// Helper to get basic fields of a Rancher object
 function getBasicProps(obj) {
 	return _.pick(obj, ['id', 'name', 'description']);
-}
-
-// download a .zip Compose config for a Stack
-function downloadComposeConfigFile(stack, cb) { // NOT IN USE
-	let requestURL = [rancherApi, 'projects', stack.accountId, 'environments', stack.id, 'composeconfig'].join('/');
-	request
-		.get(requestURL)
-		.auth(rancherApiKey, rancherApiSecret)
-		.set('Accept', 'application/json')
-		.end(function (err, res) {
-			if (err) { throw (err); }
-			if (_.isEmpty(res)) { return cb(new Error('Rancher API sent an empty response')); }
-			log.info(res);
-		});
 }
 
 // Return the entire config for all environments visible to this API key pair
 function rancherExport(cb) {
 	async.waterfall([
-			function (cb) {
-				getEnvironments(cb);
+			function (waterfallCb) {
+				getEnvironments(waterfallCb);
 			},
-			function (envs, cb) {
+			function (envs, waterfallCb) {
 				async.map(envs,	injectStacks, function (err, results) {
-					if (err) {
-						cb (err);
-					} else {
-						cb(null, results);
-					}
+					if (err) { return waterfallCb (err); }
+					waterfallCb(null, results);
 				});
 			}
 		], function (err, envs) {
-			if (err) { return cb (err); }
+			if (err) { return cb(err); }
 			log.debug({envs:envs});
-			cb (envs);
+			cb(envs);
 	});
 }
 
