@@ -8,7 +8,7 @@ const log = require('./logger').log,
 	sanitize = require('sanitize-filename');
 
 // Root path for the export.
-const	exportRootPath = __dirname + '/export';
+const exportRootPath = __dirname + '/export';
 
 // Create the root directory for export
 function createRootDirectory(cb) {
@@ -142,7 +142,7 @@ function save(envs) {
 					cb();
 				});
 			}, function (err) {
-					autoCb (err);
+				autoCb (err);
 			});
 		}
 	}, function (err, results) {

@@ -53,7 +53,7 @@ function getStacks(environment, cb) {
 function injectComposeConfig (stack, cb) {
 	async.auto({
 		basics: function (cb) {
-			cb(null, getBasicProps(stack)); // Q: is this unsafe due to no callback?
+			cb(null, getBasicProps(stack));
 		},
 		compose: function (cb) {
 			getComposeConfig(stack, function (err, composeConfig) {
