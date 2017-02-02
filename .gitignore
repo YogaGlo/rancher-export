@@ -1,5 +1,5 @@
 .vagrant/
-.env
+.env*
 node_modules/
 export/**/*
 test/mock*.json
