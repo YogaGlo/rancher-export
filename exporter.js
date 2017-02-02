@@ -72,9 +72,19 @@ function injectComposeConfig (stack, cb) {
 
 // Get Compose config for a stack
 function getComposeConfig(stack, cb) {
-	if ( stack.type !== 'environment' ) { // remember that Stack = environment in Rancher API parlance
+	// special case for when the export an ad-hoc Compose project. (E.g a docker-compose project running in CI.)
+	// We want to skip those.
+	// TODO there should be a cleaner way to catch these and skip altogether.
+	if (stack.type === 'composeProject') {
+		return cb(null, {dockerComposeConfig:"", rancherComposeConfig:""})
+	}
+
+	// remember that Stack = environment in Rancher API parlance
+	if ( stack.type !== 'environment' ) {
+		log.error({getComposeConfig: {stack: stack}});
 		throw new Error('Expected a stack, got something else');
 	}
+
 
 	request
 		.post(stack.links.self)
