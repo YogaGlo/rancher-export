@@ -76,7 +76,7 @@ function getComposeConfig(stack, cb) {
 	// We want to skip those.
 	// TODO there should be a cleaner way to catch these and skip altogether.
 	if (stack.type === 'composeProject') {
-		return cb(null, {dockerComposeConfig:"", rancherComposeConfig:""})
+		return cb(null, {dockerComposeConfig:"", rancherComposeConfig:""});
 	}
 
 	// remember that Stack = environment in Rancher API parlance

@@ -42,12 +42,13 @@ if [ -x $1 ]; then
 fi
 
 ## This sets the env vars
-export $(grep IMPORT .env |xargs)
+export $(grep IMPORT .env.import |xargs)
 
 cd ./export/$1
 
-for d in $(ls -d -1); do
+for d in $(find * -maxdepth 1 -type d); do
 	cd $d
+	echo "In $(pwd)"
 	rancher-compose --access-key $RANCHER_IMPORT_ENV_KEY --secret-key $RANCHER_IMPORT_ENV_SECRET --url $RANCHER_IMPORT_URL create
 	cd ..
 done
