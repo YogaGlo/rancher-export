@@ -1,13 +1,24 @@
 {
   "name": "rancher-export",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Export configurations from Rancher API v1",
+  "homepage": "https://github.com/YogaGlo/rancher-export",
   "main": "export.js",
   "scripts": {
     "test": "test"
   },
-  "author": "YogaGlo",
-  "license": "ISC",
+  "author": {
+    "name": "YogaGlo",
+    "email": "ops@yogaglo.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/YogaGlo/rancher-export.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YogaGlo/rancher-export/issues"
+  },
+  "license": "MIT",
   "dependencies": {
     "async": "^2.1.4",
     "bunyan": "^1.8.5",
