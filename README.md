@@ -18,11 +18,13 @@ An "environment" key limits access to the Rancher environment you're currently s
 
 ## running
 
-`node export.js`. The configs will be saved into an `export` directory in the current working dir.
+`npm start`. The configs will be saved into an `export` directory in the current working dir.
 
 the `export` directory must be manually removed before running this script again.
 
 > NOTE any 'standalone' docker-compose projects created outside of Rancher (i.e. by running `docker-compose` directly on a host) will be exported with empty docker-compose and rancher-compose files. Remove those directories.
+
+You can compress this directory for archival by running `tar -czvf export-$(date +%Y-%m-%d).tar.gz export`
 
 ## utilities
 

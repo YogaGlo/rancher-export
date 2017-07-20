@@ -33,18 +33,25 @@
 ## It's also not tested and has no safeguards against anything.
 ## You've been warned.
 ##
-## Usage: ./import <environment_name>. Assumes exports exist in ./export
+## Assumes environments exist in ./import. Copy environments/stacks from your export **as needed**.
+## Don't just blindly copy entire environments.
+## They will include Rancher system services, you don't want to import those.
+##
+## Create .env.import with your Rancher API credentials.
+##
+## Usage: ./import <environment_name>.
+##
 ##########################################################################################
 
 if [ -x $1 ]; then
-	echo "Enter an environment name. It's a directory under 'export'. If unsure, stop now and seek help."
+	echo "Enter an environment name. It's a directory under 'import'. If unsure, stop now and seek help."
 	exit 1
 fi
 
 ## This sets the env vars
 export $(grep IMPORT .env.import |xargs)
 
-cd ./export/$1
+cd ./import/$1
 
 for d in $(find * -maxdepth 1 -type d); do
 	cd $d
