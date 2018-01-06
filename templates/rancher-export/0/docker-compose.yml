@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+  rancher-export:
+    image: emcniece/rancher-export:0.1.0
+    labels:
+      io.rancher.container.agent.role: environment
+    environment:
+      CRON_PERIOD: ${CRON_PERIOD}
+      NUM_BACKUPS: ${NUM_BACKUPS}
+    volumes:
+    - ${VOL_EXPORT}:/app/export
+    - ${VOL_ARCHIVE}:/app/archive

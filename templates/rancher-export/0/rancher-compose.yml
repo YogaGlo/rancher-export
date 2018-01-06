@@ -1,0 +1,36 @@
+.catalog:
+  name: rancher-export
+  version: 0.1.0
+  description: Exports YAML files for envirionments and services.
+  questions:
+    - variable: CRON_PERIOD
+      label: Cron Period
+      description: Alpine Linux cron periods
+      required: true
+      type: "enum"
+      default: "daily"
+      options:
+        - "15min"
+        - "hourly"
+        - "daily"
+        - "monthly"
+        - "weekly"
+    - variable: NUM_BACKUPS
+      label: Number of backups
+      description: Number of backups to store in the /app/archive directory
+      required: true
+      type: "int"
+      default: 3
+    - variable: VOL_EXPORT
+      label: Export Volume
+      description: Storage for most recent export
+      default: "/etc/rancher-export/export"
+      type: "string"
+    - variable: VOL_ARCHIVE
+      label: Archive Volume
+      description: Storage for older archived exports
+      type: "string"
+      default: "/etc/rancher-export/archive"
+
+rancher-export:
+  scale: 1

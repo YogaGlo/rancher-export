@@ -1,0 +1,7 @@
+name: Rancher Export
+description: |
+  Export and backup catalog items
+version: 0.1.0
+category: Applications
+maintainer: "Eric McNiece <emcniece@gmail.com>"
+projectURL: https://github.com/emcniece/rancher-export
