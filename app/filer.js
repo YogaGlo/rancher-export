@@ -3,7 +3,7 @@
 const log = require('./logger').log,
 	_ = require('lodash'),
 	async = require('async'),
-	fs = require('fs'),
+	fs = require('fs-extra'),
 	getBasicProps = require('./exporter').getBasicProps,
 	sanitize = require('sanitize-filename');
 
@@ -12,6 +12,10 @@ const exportRootPath = __dirname + '/export';
 
 // Create the root directory for export
 function createRootDirectory(cb) {
+	if(fs.existsSync(exportRootPath)){
+		fs.removeSync(exportRootPath)
+	}
+
 	fs.mkdir(exportRootPath, cb);
 }
 

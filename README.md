@@ -42,6 +42,8 @@ RANCHER_IMPORT_URL=
 
 These keys must be Rancher **"Environment"** keys (as opposed to "Account"). This file is kept separate from the `.env` file on purpose, for safety.
 
+> **Note**: API keys for _all_ environments can be obtained by visiting https://myrancher.com/v1/apikeys and clicking the `+Create` button.
+
 `./remove-affinity.sh <environment_name>` will remove the `io.rancher.scheduler.affinity:host_label:` keys from all `.yml` files in the target environment (directory). This is useful if the target hosts will not have the same labels as the source hosts.
 
 `./import.sh <environment_name>` will import all stacks from a previously exported environment (under `export` in this directory) into the environment accessed by the above keys. It will name the stacks as per their directory names.

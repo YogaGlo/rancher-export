@@ -1,0 +1,16 @@
+#!/bin/sh
+
+echo "* Cron run: $(date)"
+DATE=$(date +"%Y_%m_%d_%H_%M_%S")
+NUM=$(expr $NUM_BACKUPS + 2)
+
+cd / && npm start
+
+if [ -d "/app/export" ]; then
+	mkdir -p "/app/archive/$DATE"
+	cp -r /app/export/* "/app/archive/$DATE"
+fi
+
+if [ -d "/app/archive" ]; then
+	find /app/archive -maxdepth 1 | tail -n +$NUM | xargs rm -rf
+fi
