@@ -8,9 +8,9 @@ const request = require('superagent'),
 	log = require('./logger').log;
 
 
-const rancherApi = process.env.RANCHER_API_BASE_URL,
-	rancherApiKey = process.env.RANCHER_API_ACCESS_KEY,
-	rancherApiSecret = process.env.RANCHER_API_SECRET_KEY;
+const rancherApi = process.env.CATTLE_URL,
+	rancherApiKey = process.env.CATTLE_ACCESS_KEY,
+	rancherApiSecret = process.env.CATTLE_SECRET_KEY;
 
 // Get available Environments (NOTE: Environment is actually called 'project' in the API)
 // TODO actually validate we're getting correct responses (there is no error checking below)

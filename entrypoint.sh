@@ -6,7 +6,7 @@ echo "####"
 
 echo "* Testing API credentials..."
 
-if curl -sSf -u "${RANCHER_API_ACCESS_KEY}:${RANCHER_API_SECRET_KEY}" $RANCHER_API_BASE_URL -o /dev/null; then
+if curl -sSf -u "${CATTLE_ACCESS_KEY}:${CATTLE_SECRET_KEY}" $CATTLE_URL -o /dev/null; then
 	echo "  - API connected!"
 else
 	echo "  - ERROR: API failure."

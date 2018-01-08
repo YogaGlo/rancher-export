@@ -23,12 +23,12 @@
       default: 3
     - variable: VOL_EXPORT
       label: Export Volume
-      description: Storage for most recent export
+      description: Storage for most recent export, internally /app/export
       default: "/etc/rancher-export/export"
       type: "string"
     - variable: VOL_ARCHIVE
       label: Archive Volume
-      description: Storage for older archived exports
+      description: Storage for older archived exports, internally /app/archive
       type: "string"
       default: "/etc/rancher-export/archive"
 
