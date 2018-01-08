@@ -9,6 +9,11 @@ cd / && npm start
 if [ -d "/app/export" ]; then
 	mkdir -p "/app/archive/$DATE"
 	cp -r /app/export/* "/app/archive/$DATE"
+
+	if [ "$COMPRESS_ARCHIVE" == "true" ]; then
+		tar -zcf "/app/archive/$DATE.tar.gz" "/app/archive/$DATE" \
+		  && rm -rf "/app/archive/$DATE"
+	fi
 fi
 
 if [ -d "/app/archive" ]; then

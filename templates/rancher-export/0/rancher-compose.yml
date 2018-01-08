@@ -32,5 +32,23 @@
       type: "string"
       default: "/etc/rancher-export/archive"
 
+    - variable: CREATE_AGENT
+      label: Agent Credentials
+      description: Use Rancher Agent API credentials (environment-level)?
+      type: "boolean"
+      default: true
+    - variable: CATTLE_URL
+      label: Rancher API URL
+      description: Optional, if not using Agent Credentials
+      type: "string"
+    - variable: CATTLE_ACCESS_KEY
+      label: Archive Volume
+      description: Optional, if not using Agent Credentials
+      type: "string"
+    - variable: CATTLE_SECRET_KEY
+      label: Archive Volume
+      description: Optional, if not using Agent Credentials
+      type: "string"
+
 rancher-export:
   scale: 1

@@ -2,6 +2,7 @@ FROM node:alpine
 
 ENV CRON_PERIOD daily
 ENV NUM_BACKUPS 3
+ENV COMPRESS_ARCHIVE true
 
 RUN apk --no-cache add jq curl
 

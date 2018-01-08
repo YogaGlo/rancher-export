@@ -22,4 +22,4 @@ echo "* First-run export: "
 run-parts "/etc/periodic/$CRON_PERIOD"
 
 echo "* Starting cron..."
-crond -l 2 -f
+crond -l 8 -f
