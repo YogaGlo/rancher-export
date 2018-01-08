@@ -39,7 +39,7 @@
       default: true
     - variable: CATTLE_URL
       label: Rancher API URL
-      description: Optional, if not using Agent Credentials
+      description: Optional, if not using Agent Credentials. Use /v1/
       type: "string"
     - variable: CATTLE_ACCESS_KEY
       label: Archive Volume

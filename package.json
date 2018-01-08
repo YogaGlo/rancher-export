@@ -1,6 +1,6 @@
 {
   "name": "rancher-export",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Export configurations from Rancher API v1",
   "homepage": "https://github.com/YogaGlo/rancher-export",
   "main": "app/main.js",
