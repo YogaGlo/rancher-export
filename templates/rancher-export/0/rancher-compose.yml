@@ -39,14 +39,14 @@
       default: true
     - variable: CATTLE_URL
       label: Rancher API URL
-      description: Optional, if not using Agent Credentials. Use /v1/
+      description: Optional, if not using Agent Credentials. Use "https://myrancher.com/v1", no trailing slash
       type: "string"
     - variable: CATTLE_ACCESS_KEY
-      label: Archive Volume
+      label: Cattle Access Key
       description: Optional, if not using Agent Credentials
       type: "string"
     - variable: CATTLE_SECRET_KEY
-      label: Archive Volume
+      label: Cattle Secret Key
       description: Optional, if not using Agent Credentials
       type: "string"
 
