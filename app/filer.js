@@ -3,7 +3,7 @@
 const log = require('./logger').log,
 	_ = require('lodash'),
 	async = require('async'),
-	fs = require('fs'),
+	fs = require('fs-extra'),
 	getBasicProps = require('./exporter').getBasicProps,
 	sanitize = require('sanitize-filename');
 
@@ -12,7 +12,11 @@ const exportRootPath = __dirname + '/export';
 
 // Create the root directory for export
 function createRootDirectory(cb) {
-	fs.mkdir(exportRootPath, cb);
+	if(fs.existsSync(exportRootPath)){
+		fs.removeSync(exportRootPath + '/*');
+	}
+
+	fs.mkdirp(exportRootPath, cb);
 }
 
 // Formatter to transform a given Env or Stack data into a filename
@@ -45,14 +49,17 @@ function createDirectory(obj, workdir, cb) {
 			fs.stat(`${workdir}/${name}`, function (err, stats) {
 				// err is bad, but 'ENOENT' is good.
 				if (err && err.code !== 'ENOENT') { return autoCb (err); }
-				if (stats) {
-					return autoCb(new Error (`Path '${workdir}/${name}' already exists`));
-				}
+
+				// No longer needed with `mkdirp` from fs-extra
+				//if (stats) {
+				//	return autoCb(new Error (`Path '${workdir}/${name}' already exists`));
+				//}
 				autoCb();
 			});
 		},
 		mkdir: function (name, absent, autoCb) {
-			fs.mkdir(`${workdir}/${name}`, autoCb);
+			let dir = `${workdir}/${name}`;
+			fs.mkdirp(dir, autoCb);
 		}
 	}, function (err, results) {
 		if (err) {

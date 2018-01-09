@@ -1,0 +1,18 @@
+version: '2'
+
+services:
+  rancher-export:
+    image: emcniece/rancher-export:0.1.0
+    labels:
+      io.rancher.container.agent.role: environment
+      io.rancher.container.create_agent: ${CREATE_AGENT}
+    environment:
+      CRON_PERIOD: ${CRON_PERIOD}
+      NUM_BACKUPS: ${NUM_BACKUPS}
+      COMPRESS_ARCHIVE: true
+      CATTLE_URL: ${CATTLE_URL}
+      CATTLE_ACCESS_KEY: ${CATTLE_ACCESS_KEY}
+      CATTLE_SECRET_KEY: ${CATTLE_SECRET_KEY}
+    volumes:
+    - ${VOL_EXPORT}:/app/export
+    - ${VOL_ARCHIVE}:/app/archive
