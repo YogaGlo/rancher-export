@@ -7,9 +7,9 @@ A script to export `docker-compose` and `rancher-compose` configurations via the
 create an `.env` file in this directory, following this format:
 
 ```
-RANCHER_API_BASE_URL=https://the.rancher.url/v1
-RANCHER_API_ACCESS_KEY=<your_key>
-RANCHER_API_SECRET_KEY=<your_secret>
+CATTLE_URL=https://the.rancher.url/v1
+CATTLE_ACCESS_KEY=<your_key>
+CATTLE_SECRET_KEY=<your_secret>
 ```
 
 The keys are generated via Rancher UI -> API menu.
@@ -35,12 +35,14 @@ WARNING: these tools are DANGEROUS and barely tested. Use at your own risk.
 Create an `.env.import` file with the following format:
 
 ```
-RANCHER_IMPORT_ENV_KEY=
-RANCHER_IMPORT_ENV_SECRET=
-RANCHER_IMPORT_URL=
+CATTLE_URL=
+CATTLE_ACCESS_KEY=
+CATTLE_SECRET_KEY=
 ```
 
 These keys must be Rancher **"Environment"** keys (as opposed to "Account"). This file is kept separate from the `.env` file on purpose, for safety.
+
+> **Note**: API keys for _all_ environments can be obtained by visiting https://myrancher.com/v1/apikeys and clicking the `+Create` button.
 
 `./remove-affinity.sh <environment_name>` will remove the `io.rancher.scheduler.affinity:host_label:` keys from all `.yml` files in the target environment (directory). This is useful if the target hosts will not have the same labels as the source hosts.
 

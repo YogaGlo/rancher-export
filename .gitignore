@@ -1,5 +1,6 @@
 .vagrant/
 .env*
 node_modules/
-export/**/*
+app/export
+app/archive
 test/mock*.json

@@ -1,0 +1,54 @@
+.catalog:
+  name: rancher-export
+  version: 0.1.0
+  description: Exports YAML files for envirionments and services.
+  questions:
+    - variable: CRON_PERIOD
+      label: Cron Period
+      description: Alpine Linux cron periods
+      required: true
+      type: "enum"
+      default: "daily"
+      options:
+        - "15min"
+        - "hourly"
+        - "daily"
+        - "monthly"
+        - "weekly"
+    - variable: NUM_BACKUPS
+      label: Number of backups
+      description: Number of backups to store in the /app/archive directory
+      required: true
+      type: "int"
+      default: 3
+    - variable: VOL_EXPORT
+      label: Export Volume
+      description: Storage for most recent export, internally /app/export
+      default: "/etc/rancher-export/export"
+      type: "string"
+    - variable: VOL_ARCHIVE
+      label: Archive Volume
+      description: Storage for older archived exports, internally /app/archive
+      type: "string"
+      default: "/etc/rancher-export/archive"
+
+    - variable: CREATE_AGENT
+      label: Agent Credentials
+      description: Use Rancher Agent API credentials (environment-level)?
+      type: "boolean"
+      default: true
+    - variable: CATTLE_URL
+      label: Rancher API URL
+      description: Optional, if not using Agent Credentials. Use "https://myrancher.com/v1", no trailing slash
+      type: "string"
+    - variable: CATTLE_ACCESS_KEY
+      label: Cattle Access Key
+      description: Optional, if not using Agent Credentials
+      type: "string"
+    - variable: CATTLE_SECRET_KEY
+      label: Cattle Secret Key
+      description: Optional, if not using Agent Credentials
+      type: "string"
+
+rancher-export:
+  scale: 1
